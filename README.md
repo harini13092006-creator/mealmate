@@ -415,7 +415,33 @@ flutter test
 | SharedPreferences | Local user data persistence |
 | Material Design | Application user interface |
 
-## 11. Conclusion
+
+
+## 11. Screenshots
+
+All screenshots below are genuinely captured from the production release build running on an Android Pixel 7 device.
+
+| 1.Home Dashboard | 2. recipe Dashboard | 3. Cooking instructions |
+| :---: | :---: | :---: |
+| ![Home Dashboard](screenshots/b.jpeg) | ![recipe Dashboard](screenshots/a.jpeg) | ![Cooking instructions](screenshots/c.jpeg) |
+
+
+
+| 4. checklist | 5. nuetritional information | 6.weekly Meal Planer |
+| :---: | :---: | :---: |
+| ![checklist](screenshots/d.jpeg) | ![nuetritional information](screenshots/e.jpeg) | ![Meal Planer ](screenshots/f.jpeg) |
+
+
+
+
+| 7. Meal planer | 8.favorites | 
+| :---: | :---: |
+| ![Meal planer](screenshots/g.jpeg) | ![favorites](screenshots/h.jpeg) | 
+
+
+---
+
+## 12. Conclusion
 
 Mealmate provides an offline-first solution for discovering Indian recipes and organizing weekly meals.
 
