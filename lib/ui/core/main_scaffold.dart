@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'responsive_layout.dart';
+
 class MainScaffold extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
@@ -15,8 +17,8 @@ class MainScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    final isDesktop = width >= 768;
+    final width = MediaQuery.sizeOf(context).width;
+    final isDesktop = width >= AppBreakpoints.desktop;
 
     if (isDesktop) {
       return Scaffold(
@@ -32,7 +34,9 @@ class MainScaffold extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 22,
-                      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                      backgroundColor: Theme.of(context)
+                          .colorScheme
+                          .primaryContainer,
                       child: Icon(
                         Icons.restaurant_menu,
                         color: Theme.of(context).colorScheme.primary,
@@ -41,9 +45,8 @@ class MainScaffold extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       'Mealmate',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                      style: Theme.of(context).textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),

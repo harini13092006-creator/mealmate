@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+
 import '../../../domain/models/meal_plan.dart';
 import '../../../domain/models/recipe.dart';
+import '../../core/recipe_cards.dart';
+import '../../core/responsive_layout.dart';
 import 'meal_planner_view_model.dart';
 
 class MealPlannerScreen extends StatelessWidget {
@@ -26,7 +29,10 @@ class MealPlannerScreen extends StatelessWidget {
               foregroundColor: theme.colorScheme.primary,
             ),
             icon: const Icon(Icons.today, size: 18),
-            label: const Text('Today', style: TextStyle(fontWeight: FontWeight.bold)),
+            label: const Text(
+              'Today',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             onPressed: viewModel.jumpToToday,
           ),
           const SizedBox(width: 8),
@@ -36,97 +42,130 @@ class MealPlannerScreen extends StatelessWidget {
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: viewModel.loadPlannerData,
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                children: [
-                  // PART 1: Weekly Navigation Bar
-                  _buildWeekNavigationHeader(context, viewModel),
-                  const SizedBox(height: 12),
+              child: ResponsiveContent(
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                  children: [
+                    // PART 1: Weekly Navigation Bar
+                    _buildWeekNavigationHeader(context, viewModel),
+                    const SizedBox(height: 12),
 
-                  // 7-Day Calendar Strip (Monday - Sunday)
-                  _buildSevenDaySelector(context, viewModel),
-                  const SizedBox(height: 16),
+                    // 7-Day Calendar Strip (Monday - Sunday)
+                    _buildSevenDaySelector(context, viewModel),
+                    const SizedBox(height: 16),
 
-                  // Weekly Overview Banner
-                  _buildWeeklyOverviewBanner(context, viewModel),
-                  const SizedBox(height: 20),
+                    // Weekly Overview Banner
+                    _buildWeeklyOverviewBanner(context, viewModel),
+                    const SizedBox(height: 20),
 
-                  // Selected Day Title
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            DateFormat('EEEE, MMMM d').format(viewModel.selectedDate),
-                            style: theme.textTheme.titleMedium?.copyWith(
+                    // Selected Day Title
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final heading = Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              DateFormat('EEEE, MMMM d')
+                                  .format(viewModel.selectedDate),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              _isSameDay(viewModel.selectedDate, DateTime.now())
+                                  ? "Today's Schedule"
+                                  : "Planned menu for ${DateFormat('EEEE').format(viewModel.selectedDate)}",
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.textTheme.bodySmall?.color
+                                    ?.withValues(alpha: 0.75),
+                              ),
+                            ),
+                          ],
+                        );
+                        final badge = Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${viewModel.getPlannedCountForDay(viewModel.selectedDate)} / 3 Planned',
+                            style: TextStyle(
+                              fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              fontSize: 18,
+                              color: theme.colorScheme.onPrimaryContainer,
                             ),
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            _isSameDay(viewModel.selectedDate, DateTime.now())
-                                ? "Today's Schedule"
-                                : "Planned menu for ${DateFormat('EEEE').format(viewModel.selectedDate)}",
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.75),
-                            ),
-                          ),
-                        ],
+                        );
+                        if (constraints.maxWidth < 390) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              heading,
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: AlignmentDirectional.centerEnd,
+                                child: badge,
+                              ),
+                            ],
+                          );
+                        }
+                        return Row(
+                          children: [
+                            Expanded(child: heading),
+                            badge,
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // PART 2 & 3: Three Daily Meal Categories
+                    _buildMealCategorySlot(
+                      context,
+                      type: MealType.breakfast,
+                      assignedMeal: viewModel.getMealForSlot(
+                        MealType.breakfast,
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '${viewModel.getPlannedCountForDay(viewModel.selectedDate)} / 3 Planned',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.onPrimaryContainer,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
+                      viewModel: viewModel,
+                    ),
+                    const SizedBox(height: 14),
 
-                  // PART 2 & 3: Three Daily Meal Categories
-                  _buildMealCategorySlot(
-                    context,
-                    type: MealType.breakfast,
-                    assignedMeal: viewModel.getMealForSlot(MealType.breakfast),
-                    viewModel: viewModel,
-                  ),
-                  const SizedBox(height: 14),
+                    _buildMealCategorySlot(
+                      context,
+                      type: MealType.lunch,
+                      assignedMeal: viewModel.getMealForSlot(MealType.lunch),
+                      viewModel: viewModel,
+                    ),
+                    const SizedBox(height: 14),
 
-                  _buildMealCategorySlot(
-                    context,
-                    type: MealType.lunch,
-                    assignedMeal: viewModel.getMealForSlot(MealType.lunch),
-                    viewModel: viewModel,
-                  ),
-                  const SizedBox(height: 14),
-
-                  _buildMealCategorySlot(
-                    context,
-                    type: MealType.dinner,
-                    assignedMeal: viewModel.getMealForSlot(MealType.dinner),
-                    viewModel: viewModel,
-                  ),
-                  const SizedBox(height: 40),
-                ],
+                    _buildMealCategorySlot(
+                      context,
+                      type: MealType.dinner,
+                      assignedMeal: viewModel.getMealForSlot(MealType.dinner),
+                      viewModel: viewModel,
+                    ),
+                    const SizedBox(height: 40),
+                  ],
+                ),
               ),
             ),
     );
   }
 
   // PART 1: Weekly Navigation Interface
-  Widget _buildWeekNavigationHeader(BuildContext context, MealPlannerViewModel viewModel) {
+  Widget _buildWeekNavigationHeader(
+    BuildContext context,
+    MealPlannerViewModel viewModel,
+  ) {
     final theme = Theme.of(context);
 
     return Container(
@@ -137,22 +176,36 @@ class MealPlannerScreen extends StatelessWidget {
         border: Border.all(color: theme.dividerColor.withValues(alpha: 0.25)),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           IconButton(
             icon: const Icon(Icons.chevron_left_rounded, size: 28),
             tooltip: 'Previous week',
             onPressed: viewModel.previousWeek,
           ),
-          Row(
-            children: [
-              Icon(Icons.calendar_month_outlined, size: 18, color: theme.colorScheme.primary),
-              const SizedBox(width: 8),
-              Text(
-                viewModel.weekRangeFormatted,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-              ),
-            ],
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.calendar_month_outlined,
+                  size: 18,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    viewModel.weekRangeFormatted,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           IconButton(
             icon: const Icon(Icons.chevron_right_rounded, size: 28),
@@ -165,7 +218,10 @@ class MealPlannerScreen extends StatelessWidget {
   }
 
   // PART 1: 7-Day Calendar Strip (Monday - Sunday)
-  Widget _buildSevenDaySelector(BuildContext context, MealPlannerViewModel viewModel) {
+  Widget _buildSevenDaySelector(
+    BuildContext context,
+    MealPlannerViewModel viewModel,
+  ) {
     final theme = Theme.of(context);
     final now = DateTime.now();
 
@@ -188,21 +244,23 @@ class MealPlannerScreen extends StatelessWidget {
                   color: isSelected
                       ? theme.colorScheme.primary
                       : (isToday
-                          ? theme.colorScheme.primaryContainer
-                          : theme.colorScheme.surface),
+                            ? theme.colorScheme.primaryContainer
+                            : theme.colorScheme.surface),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
                     color: isSelected
                         ? theme.colorScheme.primary
                         : (isToday
-                            ? theme.colorScheme.primary.withValues(alpha: 0.5)
-                            : theme.dividerColor.withValues(alpha: 0.2)),
+                              ? theme.colorScheme.primary.withValues(alpha: 0.5)
+                              : theme.dividerColor.withValues(alpha: 0.2)),
                     width: isToday && !isSelected ? 1.5 : 1.0,
                   ),
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.3,
+                            ),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
@@ -220,8 +278,8 @@ class MealPlannerScreen extends StatelessWidget {
                         color: isSelected
                             ? Colors.white
                             : (isToday
-                                ? theme.colorScheme.primary
-                                : theme.textTheme.bodySmall?.color),
+                                  ? theme.colorScheme.primary
+                                  : theme.textTheme.bodySmall?.color),
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -231,7 +289,9 @@ class MealPlannerScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: isSelected ? Colors.white : theme.textTheme.bodyLarge?.color,
+                        color: isSelected
+                            ? Colors.white
+                            : theme.textTheme.bodyLarge?.color,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -249,8 +309,8 @@ class MealPlannerScreen extends StatelessWidget {
                             color: isSelected
                                 ? (hasMeal ? Colors.white : Colors.white24)
                                 : (hasMeal
-                                    ? theme.colorScheme.primary
-                                    : Colors.transparent),
+                                      ? theme.colorScheme.primary
+                                      : Colors.transparent),
                           ),
                         );
                       }),
@@ -266,7 +326,10 @@ class MealPlannerScreen extends StatelessWidget {
   }
 
   // PART 5: Weekly Overview Banner
-  Widget _buildWeeklyOverviewBanner(BuildContext context, MealPlannerViewModel viewModel) {
+  Widget _buildWeeklyOverviewBanner(
+    BuildContext context,
+    MealPlannerViewModel viewModel,
+  ) {
     final theme = Theme.of(context);
     final totalPlanned = viewModel.weekMeals.length;
     const maxMeals = 21; // 7 days * 3 meals
@@ -311,8 +374,10 @@ class MealPlannerScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     const Text(
                       'Weekly Plan Status',
@@ -339,7 +404,9 @@ class MealPlannerScreen extends StatelessWidget {
                     value: percent,
                     minHeight: 6,
                     backgroundColor: Colors.white24,
-                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      Colors.white,
+                    ),
                   ),
                 ),
               ],
@@ -378,8 +445,11 @@ class MealPlannerScreen extends StatelessWidget {
           // Slot Header (Icon + Meal Category + Add Action)
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 12, 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Row(
                   children: [
@@ -412,8 +482,15 @@ class MealPlannerScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                     ),
                     icon: const Icon(Icons.add_rounded, size: 18),
-                    label: Text('Add ${type.displayName}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                    onPressed: () => _openRecipePicker(context, type, viewModel),
+                    label: Text(
+                      'Add ${type.displayName}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                    onPressed: () =>
+                        _openRecipePicker(context, type, viewModel),
                   )
                 else
                   TextButton.icon(
@@ -422,8 +499,19 @@ class MealPlannerScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                     ),
                     icon: const Icon(Icons.swap_horiz_rounded, size: 18),
-                    label: const Text('Replace', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                    onPressed: () => _openRecipePicker(context, type, viewModel, existingMealId: assignedMeal.id),
+                    label: const Text(
+                      'Replace',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onPressed: () => _openRecipePicker(
+                      context,
+                      type,
+                      viewModel,
+                      existingMealId: assignedMeal.id,
+                    ),
                   ),
               ],
             ),
@@ -443,7 +531,11 @@ class MealPlannerScreen extends StatelessWidget {
   }
 
   // PART 5: Empty-State Card
-  Widget _buildEmptyMealSlot(BuildContext context, MealType type, MealPlannerViewModel viewModel) {
+  Widget _buildEmptyMealSlot(
+    BuildContext context,
+    MealType type,
+    MealPlannerViewModel viewModel,
+  ) {
     final theme = Theme.of(context);
 
     return InkWell(
@@ -452,7 +544,9 @@ class MealPlannerScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.25),
+          color: theme.colorScheme.surfaceContainerHighest.withValues(
+            alpha: 0.25,
+          ),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: theme.dividerColor.withValues(alpha: 0.3),
@@ -462,14 +556,23 @@ class MealPlannerScreen extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.add_circle_outline_rounded, color: theme.colorScheme.primary, size: 20),
+            Icon(
+              Icons.add_circle_outline_rounded,
+              color: theme.colorScheme.primary,
+              size: 20,
+            ),
             const SizedBox(width: 8),
-            Text(
-              'No ${type.displayName.toLowerCase()} scheduled yet. Tap to add recipe.',
-              style: TextStyle(
-                color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
+            Expanded(
+              child: Text(
+                'No ${type.displayName.toLowerCase()} scheduled yet. Tap to add recipe.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: theme.textTheme.bodyMedium?.color?.withValues(
+                    alpha: 0.7,
+                  ),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ],
@@ -479,124 +582,145 @@ class MealPlannerScreen extends StatelessWidget {
   }
 
   // PART 3: Assigned Meal Card
-  Widget _buildAssignedMealCard(BuildContext context, PlannedMeal planned, MealPlannerViewModel viewModel) {
+  Widget _buildAssignedMealCard(
+    BuildContext context,
+    PlannedMeal planned,
+    MealPlannerViewModel viewModel,
+  ) {
     final theme = Theme.of(context);
     final recipe = planned.recipe;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: planned.isCompleted
-            ? theme.colorScheme.primary.withValues(alpha: 0.04)
-            : theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: planned.isCompleted
-              ? Colors.green.withValues(alpha: 0.3)
-              : theme.dividerColor.withValues(alpha: 0.3),
+    final image = ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: SizedBox(
+        width: 68,
+        height: 68,
+        child: RecipeImage(
+          imageUrl: recipe.imageUrl,
+          cacheWidth: (68 * MediaQuery.devicePixelRatioOf(context)).round(),
         ),
       ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.push('/recipes/${recipe.id}'),
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Row(
-            children: [
-              // Recipe Image Thumbnail
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.network(
-                  recipe.imageUrl,
-                  width: 70,
-                  height: 70,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => Container(
-                    width: 70,
-                    height: 70,
-                    color: Colors.orange.shade100,
-                    child: const Icon(Icons.fastfood, color: Colors.orange),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
+    );
+    final info = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          recipe.name,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            decoration: planned.isCompleted ? TextDecoration.lineThrough : null,
+            color: planned.isCompleted ? Colors.grey : null,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Wrap(
+          spacing: 8,
+          runSpacing: 2,
+          children: [
+            Text(
+              '${recipe.prepTimeMinutes}m prep',
+              style: theme.textTheme.bodySmall,
+            ),
+            Text(
+              '${recipe.nutrition.calories} kcal',
+              style: theme.textTheme.bodySmall,
+            ),
+          ],
+        ),
+        const SizedBox(height: 5),
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              recipe.category,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ),
+      ],
+    );
+    final actions = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          visualDensity: VisualDensity.compact,
+          icon: Icon(
+            planned.isCompleted
+                ? Icons.check_circle_rounded
+                : Icons.radio_button_unchecked_rounded,
+            color: planned.isCompleted ? Colors.green : Colors.grey,
+            size: 22,
+          ),
+          tooltip: planned.isCompleted ? 'Mark as not eaten' : 'Mark as eaten',
+          onPressed: () => viewModel.toggleCompleted(planned.id),
+        ),
+        IconButton(
+          visualDensity: VisualDensity.compact,
+          icon: const Icon(
+            Icons.delete_outline_rounded,
+            size: 20,
+            color: Colors.redAccent,
+          ),
+          tooltip: 'Remove from plan',
+          onPressed: () => _confirmRemoveMeal(context, planned, viewModel),
+        ),
+      ],
+    );
 
-              // Meal Info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      recipe.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        decoration: planned.isCompleted ? TextDecoration.lineThrough : null,
-                        color: planned.isCompleted ? Colors.grey : null,
+    return LayoutBuilder(
+      builder: (context, constraints) => Container(
+        decoration: BoxDecoration(
+          color: planned.isCompleted
+              ? theme.colorScheme.primary.withValues(alpha: 0.04)
+              : theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: planned.isCompleted
+                ? Colors.green.withValues(alpha: 0.3)
+                : theme.dividerColor.withValues(alpha: 0.3),
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => context.push('/recipes/${recipe.id}'),
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: constraints.maxWidth < 440
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          image,
+                          const SizedBox(width: 10),
+                          Expanded(child: info),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(Icons.schedule, size: 13, color: theme.colorScheme.primary),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${recipe.prepTimeMinutes}m prep',
-                          style: TextStyle(fontSize: 12, color: theme.textTheme.bodySmall?.color),
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          '•  ${recipe.nutrition.calories} kcal',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: theme.textTheme.bodySmall?.color,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surfaceContainerHighest,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            recipe.category,
-                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              // Completed Checkbox & Remove Action
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: Icon(
-                      planned.isCompleted ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                      color: planned.isCompleted ? Colors.green : Colors.grey,
-                      size: 22,
-                    ),
-                    tooltip: planned.isCompleted ? 'Mark as not eaten' : 'Mark as eaten',
-                    onPressed: () => viewModel.toggleCompleted(planned.id),
+                      Align(
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: actions,
+                      ),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      image,
+                      const SizedBox(width: 12),
+                      Expanded(child: info),
+                      actions,
+                    ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline_rounded, size: 20, color: Colors.redAccent),
-                    tooltip: 'Remove from plan',
-                    onPressed: () => _confirmRemoveMeal(context, planned, viewModel),
-                  ),
-                ],
-              ),
-            ],
           ),
         ),
       ),
@@ -604,13 +728,19 @@ class MealPlannerScreen extends StatelessWidget {
   }
 
   // Remove confirmation
-  void _confirmRemoveMeal(BuildContext context, PlannedMeal planned, MealPlannerViewModel viewModel) {
+  void _confirmRemoveMeal(
+    BuildContext context,
+    PlannedMeal planned,
+    MealPlannerViewModel viewModel,
+  ) {
     showDialog(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Remove from Plan'),
-          content: Text('Remove "${planned.recipe.name}" from ${planned.mealType.displayName}?'),
+          content: Text(
+            'Remove "${planned.recipe.name}" from ${planned.mealType.displayName}?',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
@@ -668,7 +798,9 @@ class MealPlannerScreen extends StatelessWidget {
               viewModel.addMeal(mealType, recipe);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Added ${recipe.name} to ${mealType.displayName}!'),
+                  content: Text(
+                    'Added ${recipe.name} to ${mealType.displayName}!',
+                  ),
                   behavior: SnackBarBehavior.floating,
                 ),
               );
@@ -717,7 +849,12 @@ class _RecipePickerSheetState extends State<_RecipePickerSheet> {
   String _searchQuery = '';
   String _selectedCategory = 'All';
 
-  final List<String> _categories = const ['All', 'Quick Meals', 'Healthy Bowls', 'Desserts'];
+  final List<String> _categories = const [
+    'All',
+    'Quick Meals',
+    'Healthy Bowls',
+    'Desserts',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -726,9 +863,11 @@ class _RecipePickerSheetState extends State<_RecipePickerSheet> {
 
     // Filter recipes dynamically
     final filteredRecipes = widget.recipes.where((recipe) {
-      final matchesSearch = _searchQuery.isEmpty ||
+      final matchesSearch =
+          _searchQuery.isEmpty ||
           recipe.name.toLowerCase().contains(_searchQuery.toLowerCase().trim());
-      final matchesCategory = _selectedCategory == 'All' ||
+      final matchesCategory =
+          _selectedCategory == 'All' ||
           recipe.category.toLowerCase() == _selectedCategory.toLowerCase();
       return matchesSearch && matchesCategory;
     }).toList();
@@ -762,11 +901,15 @@ class _RecipePickerSheetState extends State<_RecipePickerSheet> {
                   children: [
                     Text(
                       'Assign to ${widget.mealType.displayName}',
-                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     Text(
                       DateFormat('EEEE, MMM d').format(widget.selectedDate),
-                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                      ),
                     ),
                   ],
                 ),
@@ -787,8 +930,13 @@ class _RecipePickerSheetState extends State<_RecipePickerSheet> {
               decoration: InputDecoration(
                 hintText: 'Search 24+ recipes by name...',
                 prefixIcon: const Icon(Icons.search),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ),
@@ -815,7 +963,9 @@ class _RecipePickerSheetState extends State<_RecipePickerSheet> {
                   labelStyle: TextStyle(
                     fontSize: 12,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                    color: isSelected ? theme.colorScheme.onPrimaryContainer : null,
+                    color: isSelected
+                        ? theme.colorScheme.onPrimaryContainer
+                        : null,
                   ),
                 );
               },
@@ -831,7 +981,11 @@ class _RecipePickerSheetState extends State<_RecipePickerSheet> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.search_off_rounded, size: 48, color: theme.disabledColor),
+                        Icon(
+                          Icons.search_off_rounded,
+                          size: 48,
+                          color: theme.disabledColor,
+                        ),
                         const SizedBox(height: 12),
                         const Text('No recipes match your filter'),
                       ],
@@ -847,10 +1001,15 @@ class _RecipePickerSheetState extends State<_RecipePickerSheet> {
                         decoration: BoxDecoration(
                           color: theme.colorScheme.surface,
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: theme.dividerColor.withValues(alpha: 0.25)),
+                          border: Border.all(
+                            color: theme.dividerColor.withValues(alpha: 0.25),
+                          ),
                         ),
                         child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
                           leading: ClipRRect(
                             borderRadius: BorderRadius.circular(8),
                             child: Image.network(
@@ -862,7 +1021,10 @@ class _RecipePickerSheetState extends State<_RecipePickerSheet> {
                                 width: 52,
                                 height: 52,
                                 color: Colors.orange.shade100,
-                                child: const Icon(Icons.fastfood, color: Colors.orange),
+                                child: const Icon(
+                                  Icons.fastfood,
+                                  color: Colors.orange,
+                                ),
                               ),
                             ),
                           ),
@@ -870,7 +1032,10 @@ class _RecipePickerSheetState extends State<_RecipePickerSheet> {
                             recipe.name,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
                           ),
                           subtitle: Text(
                             '${recipe.category} • ${recipe.prepTimeMinutes}m prep • ${recipe.nutrition.calories} kcal',
@@ -880,14 +1045,25 @@ class _RecipePickerSheetState extends State<_RecipePickerSheet> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: theme.colorScheme.primary,
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 8,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                             ),
                             onPressed: () {
                               widget.onRecipeSelected(recipe);
                               Navigator.pop(context);
                             },
-                            child: const Text('Assign', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                            child: const Text(
+                              'Assign',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ),
                       );

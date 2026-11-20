@@ -181,333 +181,369 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
         : 0.0;
 
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          // 1. Large Hero Header with Image & Bookmark/Favorite Action
-          SliverAppBar(
-            expandedHeight: 300,
-            pinned: true,
-            stretch: true,
-            backgroundColor: theme.colorScheme.surface,
-            flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                recipe.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  shadows: [Shadow(blurRadius: 10, color: Colors.black87)],
-                ),
-              ),
-              background: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Image(
-                    image: recipe.imageUrl.startsWith('assets/')
-                        ? AssetImage(recipe.imageUrl)
-                        : NetworkImage(recipe.imageUrl),
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => Container(
-                      color: Colors.orange.shade100,
-                      child: const Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.no_photography_outlined,
-                              size: 48,
-                              color: Colors.orange,
-                            ),
-                            Text(
-                              'Photo unavailable',
-                              style: TextStyle(color: Colors.brown),
-                            ),
-                          ],
-                        ),
-                      ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 960),
+          child: CustomScrollView(
+            slivers: [
+              // 1. Large Hero Header with Image & Bookmark/Favorite Action
+              SliverAppBar(
+                expandedHeight: 300,
+                pinned: true,
+                stretch: true,
+                backgroundColor: theme.colorScheme.surface,
+                flexibleSpace: FlexibleSpaceBar(
+                  title: Text(
+                    recipe.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      shadows: [Shadow(blurRadius: 10, color: Colors.black87)],
                     ),
                   ),
-                  const DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.black45,
-                          Colors.transparent,
-                          Colors.black87,
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        stops: [0.0, 0.4, 1.0],
+                  background: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image(
+                        image: recipe.imageUrl.startsWith('assets/')
+                            ? AssetImage(recipe.imageUrl)
+                            : NetworkImage(recipe.imageUrl),
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => Container(
+                          color: Colors.orange.shade100,
+                          child: const Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.no_photography_outlined,
+                                  size: 48,
+                                  color: Colors.orange,
+                                ),
+                                Text(
+                                  'Photo unavailable',
+                                  style: TextStyle(color: Colors.brown),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.black45,
+                              Colors.transparent,
+                              Colors.black87,
+                            ],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            stops: [0.0, 0.4, 1.0],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  // PART 4: Bookmark / Favorite Button
+                  Container(
+                    margin: const EdgeInsets.only(right: 12),
+                    child: CircleAvatar(
+                      radius: 20,
+                      backgroundColor: Colors.black38,
+                      child: IconButton(
+                        icon: Icon(
+                          recipe.isFavorite
+                              ? Icons.bookmark_rounded
+                              : Icons.bookmark_border_rounded,
+                          color: recipe.isFavorite
+                              ? theme.colorScheme.primary
+                              : Colors.white,
+                        ),
+                        tooltip: recipe.isFavorite
+                            ? 'Remove from favorites'
+                            : 'Add to favorites',
+                        onPressed: _toggleFavorite,
                       ),
                     ),
                   ),
                 ],
               ),
-            ),
-            actions: [
-              // PART 4: Bookmark / Favorite Button
-              Container(
-                margin: const EdgeInsets.only(right: 12),
-                child: CircleAvatar(
-                  radius: 20,
-                  backgroundColor: Colors.black38,
-                  child: IconButton(
-                    icon: Icon(
-                      recipe.isFavorite
-                          ? Icons.bookmark_rounded
-                          : Icons.bookmark_border_rounded,
-                      color: recipe.isFavorite
-                          ? theme.colorScheme.primary
-                          : Colors.white,
-                    ),
-                    tooltip: recipe.isFavorite
-                        ? 'Remove from favorites'
-                        : 'Add to favorites',
-                    onPressed: _toggleFavorite,
+
+              // Content body
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Categories and Difficulty tags
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              recipe.category,
+                              style: TextStyle(
+                                color: theme.colorScheme.onPrimaryContainer,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.speed_rounded,
+                                  size: 14,
+                                  color: theme.colorScheme.primary,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  recipe.difficultyLevel,
+                                  style: TextStyle(
+                                    color: theme.textTheme.bodyMedium?.color,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.star_rounded,
+                                size: 18,
+                                color: Colors.amber,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                recipe.rating.toString(),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+
+                      // 2. Recipe Name
+                      Text(
+                        recipe.name,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // 3. Recipe Description
+                      Text(
+                        recipe.description,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: theme.textTheme.bodyMedium?.color?.withValues(
+                            alpha: 0.8,
+                          ),
+                          height: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // 4, 5, 6, 7. Highlights: Prep, Cook, Total, Servings
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: theme.dividerColor.withValues(alpha: 0.2),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.03),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final columns = constraints.maxWidth < 420 ? 2 : 4;
+                            final itemWidth =
+                                (constraints.maxWidth - (columns - 1) * 8) /
+                                columns;
+                            return Wrap(
+                              spacing: 8,
+                              runSpacing: 12,
+                              children: [
+                                _HighlightItem(
+                                  width: itemWidth,
+                                  icon: Icons.timer_outlined,
+                                  title: 'Prep Time',
+                                  value: '${recipe.prepTimeMinutes}m',
+                                ),
+                                _HighlightItem(
+                                  width: itemWidth,
+                                  icon: Icons.local_fire_department_outlined,
+                                  title: 'Cook Time',
+                                  value: '${recipe.cookTimeMinutes}m',
+                                ),
+                                _HighlightItem(
+                                  width: itemWidth,
+                                  icon: Icons.hourglass_bottom_outlined,
+                                  title: 'Total Time',
+                                  value: '${recipe.totalTimeMinutes}m',
+                                ),
+                                _HighlightItem(
+                                  width: itemWidth,
+                                  icon: Icons.people_outline,
+                                  title: 'Servings',
+                                  value: '${recipe.servings}',
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // 8. Nutritional Information Section
+                      Text(
+                        'Nutritional Information',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 17,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          const spacing = 8.0;
+                          final columns = constraints.maxWidth < 420 ? 2 : 4;
+                          final cardWidth =
+                              (constraints.maxWidth - (columns - 1) * spacing) /
+                              columns;
+                          return Wrap(
+                            spacing: spacing,
+                            runSpacing: spacing,
+                            children: [
+                              SizedBox(
+                                width: cardWidth,
+                                child: _NutritionCard(
+                                  label: 'Calories',
+                                  value: '${recipe.nutrition.calories}',
+                                  unit: 'kcal',
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                              SizedBox(
+                                width: cardWidth,
+                                child: _NutritionCard(
+                                  label: 'Protein',
+                                  value: recipe.nutrition.proteinGrams
+                                      .toStringAsFixed(0),
+                                  unit: 'g',
+                                  color: Colors.blueAccent,
+                                ),
+                              ),
+                              SizedBox(
+                                width: cardWidth,
+                                child: _NutritionCard(
+                                  label: 'Carbs',
+                                  value: recipe.nutrition.carbsGrams
+                                      .toStringAsFixed(0),
+                                  unit: 'g',
+                                  color: Colors.orangeAccent.shade700,
+                                ),
+                              ),
+                              SizedBox(
+                                width: cardWidth,
+                                child: _NutritionCard(
+                                  label: 'Fat',
+                                  value: recipe.nutrition.fatGrams
+                                      .toStringAsFixed(0),
+                                  unit: 'g',
+                                  color: Colors.teal,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 32),
+
+                      // PART 2: INTERACTIVE INGREDIENT CHECKLIST
+                      _buildIngredientChecklistHeader(
+                        context,
+                        completed: completedIngredients,
+                        total: totalIngredients,
+                        progress: checklistProgress,
+                        recipe: recipe,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildIngredientChecklist(recipe.ingredients),
+                      const SizedBox(height: 32),
+
+                      // PART 3: COOKING INSTRUCTIONS
+                      Text(
+                        'Cooking Instructions',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Follow these sequential steps for best results:',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.textTheme.bodySmall?.color?.withValues(
+                            alpha: 0.8,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      _buildInstructionCards(recipe.instructions),
+                      const SizedBox(height: 40),
+                    ],
                   ),
                 ),
               ),
             ],
           ),
-
-          // Content body
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Categories and Difficulty tags
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          recipe.category,
-                          style: TextStyle(
-                            color: theme.colorScheme.onPrimaryContainer,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.speed_rounded,
-                              size: 14,
-                              color: theme.colorScheme.primary,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              recipe.difficultyLevel,
-                              style: TextStyle(
-                                color: theme.textTheme.bodyMedium?.color,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Spacer(),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.star_rounded,
-                            size: 18,
-                            color: Colors.amber,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            recipe.rating.toString(),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  // 2. Recipe Name
-                  Text(
-                    recipe.name,
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  // 3. Recipe Description
-                  Text(
-                    recipe.description,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.textTheme.bodyMedium?.color?.withValues(
-                        alpha: 0.8,
-                      ),
-                      height: 1.4,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // 4, 5, 6, 7. Highlights: Prep, Cook, Total, Servings
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: theme.dividerColor.withValues(alpha: 0.2),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.03),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _HighlightItem(
-                          icon: Icons.timer_outlined,
-                          title: 'Prep Time',
-                          value: '${recipe.prepTimeMinutes}m',
-                        ),
-                        _HighlightItem(
-                          icon: Icons.local_fire_department_outlined,
-                          title: 'Cook Time',
-                          value: '${recipe.cookTimeMinutes}m',
-                        ),
-                        _HighlightItem(
-                          icon: Icons.hourglass_bottom_outlined,
-                          title: 'Total Time',
-                          value: '${recipe.totalTimeMinutes}m',
-                        ),
-                        _HighlightItem(
-                          icon: Icons.people_outline,
-                          title: 'Servings',
-                          value: '${recipe.servings}',
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // 8. Nutritional Information Section
-                  Text(
-                    'Nutritional Information',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 17,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _NutritionCard(
-                          label: 'Calories',
-                          value: '${recipe.nutrition.calories}',
-                          unit: 'kcal',
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _NutritionCard(
-                          label: 'Protein',
-                          value: recipe.nutrition.proteinGrams.toStringAsFixed(
-                            0,
-                          ),
-                          unit: 'g',
-                          color: Colors.blueAccent,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _NutritionCard(
-                          label: 'Carbs',
-                          value: recipe.nutrition.carbsGrams.toStringAsFixed(0),
-                          unit: 'g',
-                          color: Colors.orangeAccent.shade700,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _NutritionCard(
-                          label: 'Fat',
-                          value: recipe.nutrition.fatGrams.toStringAsFixed(0),
-                          unit: 'g',
-                          color: Colors.teal,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 32),
-
-                  // PART 2: INTERACTIVE INGREDIENT CHECKLIST
-                  _buildIngredientChecklistHeader(
-                    context,
-                    completed: completedIngredients,
-                    total: totalIngredients,
-                    progress: checklistProgress,
-                    recipe: recipe,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildIngredientChecklist(recipe.ingredients),
-                  const SizedBox(height: 32),
-
-                  // PART 3: COOKING INSTRUCTIONS
-                  Text(
-                    'Cooking Instructions',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Follow these sequential steps for best results:',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.textTheme.bodySmall?.color?.withValues(
-                        alpha: 0.8,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  _buildInstructionCards(recipe.instructions),
-                  const SizedBox(height: 40),
-                ],
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
 
       // Bottom Bar
@@ -561,6 +597,54 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   }) {
     final theme = Theme.of(context);
     final percent = (progress * 100).toInt();
+    final title = Text(
+      'Ingredients Checklist',
+      style: theme.textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.bold,
+        fontSize: 17,
+      ),
+    );
+    final status = Text(
+      '$completed of $total ingredients ready ($percent%)',
+      style: TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: progress == 1.0 ? Colors.green : theme.colorScheme.primary,
+      ),
+    );
+    final actions = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (completed > 0)
+          TextButton.icon(
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.redAccent,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+            ),
+            icon: const Icon(Icons.refresh_rounded, size: 16),
+            label: const Text('Reset', style: TextStyle(fontSize: 12)),
+            onPressed: _resetChecklist,
+          ),
+        IconButton(
+          icon: const Icon(Icons.add_shopping_cart, size: 20),
+          tooltip: 'Export ingredients to Grocery List',
+          onPressed: () {
+            context.read<GroceriesViewModel>().addRecipeIngredients(
+              recipe.name,
+              recipe.ingredients,
+            );
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Added ${recipe.ingredients.length} items to Groceries!',
+                ),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          },
+        ),
+      ],
+    );
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -574,70 +658,35 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth < 420) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(child: title),
+                        actions,
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    status,
+                  ],
+                );
+              }
+              return Row(
                 children: [
-                  Text(
-                    'Ingredients Checklist',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 17,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [title, const SizedBox(height: 2), status],
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '$completed of $total ingredients ready ($percent%)',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: progress == 1.0
-                          ? Colors.green
-                          : theme.colorScheme.primary,
-                    ),
-                  ),
+                  actions,
                 ],
-              ),
-              Row(
-                children: [
-                  // Reset Checklist button
-                  if (completed > 0)
-                    TextButton.icon(
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.redAccent,
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                      ),
-                      icon: const Icon(Icons.refresh_rounded, size: 16),
-                      label: const Text(
-                        'Reset',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                      onPressed: _resetChecklist,
-                    ),
-                  // Export to groceries button
-                  IconButton(
-                    icon: const Icon(Icons.add_shopping_cart, size: 20),
-                    tooltip: 'Export ingredients to Grocery List',
-                    onPressed: () {
-                      context.read<GroceriesViewModel>().addRecipeIngredients(
-                        recipe.name,
-                        recipe.ingredients,
-                      );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Added ${recipe.ingredients.length} items to Groceries!',
-                          ),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ],
+              );
+            },
           ),
           const SizedBox(height: 12),
           // Progress bar
@@ -944,11 +993,13 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
 }
 
 class _HighlightItem extends StatelessWidget {
+  final double width;
   final IconData icon;
   final String title;
   final String value;
 
   const _HighlightItem({
+    required this.width,
     required this.icon,
     required this.title,
     required this.value,
@@ -956,17 +1007,20 @@ class _HighlightItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(height: 4),
-        Text(title, style: const TextStyle(fontSize: 11, color: Colors.grey)),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-        ),
-      ],
+    return SizedBox(
+      width: width,
+      child: Column(
+        children: [
+          Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
+          const SizedBox(height: 4),
+          Text(title, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
     );
   }
 }
